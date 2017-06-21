@@ -1,0 +1,33 @@
+FROM centos:7
+MAINTAINER matthewcmead <matthewcmead@gmail.com>
+
+RUN \
+  yum install -y \
+      curl \
+      unzip \
+      python \
+      cairo-devel \
+      protobuf-devel \
+      xorg-x11-server-Xvfb \
+      which \
+      mesa-dri-drivers
+
+RUN mkdir -p /usr/src/app
+
+ADD app.tar.gz /usr/src
+ADD node-v4.8.3-linux-x64.tar.gz /usr/local
+
+RUN \
+    cd /usr/bin && ln -s /usr/local/node-v4.8.3-linux-x64/bin/npm && ln -s /usr/local/node-v4.8.3-linux-x64/bin/node
+
+RUN \
+    cd /usr/lib64 && ln -s libcurl.so.4 libcurl-gnutls.so.4
+
+VOLUME /data
+WORKDIR /data
+
+ENV NODE_ENV="production"
+
+EXPOSE 80
+ENTRYPOINT ["/usr/src/app/run.sh"]
+

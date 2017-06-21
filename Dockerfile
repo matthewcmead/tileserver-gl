@@ -41,7 +41,7 @@ RUN \
 &&  yum clean all
 
 RUN mkdir -p /usr/src/app
-COPY / /usr/src/app
+COPY /app /usr/src/app
 
 RUN \
     cd /usr/src/app \
