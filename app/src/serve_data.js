@@ -6,9 +6,9 @@ var fs = require('fs'),
 
 var clone = require('clone'),
     express = require('express'),
-    mbtiles = require('mbtiles'),
+    mbtiles = require('@mapbox/mbtiles'),
     pbf = require('pbf'),
-    VectorTile = require('vector-tile').VectorTile;
+    VectorTile = require('@mapbox/vector-tile').VectorTile;
 
 var tileshrinkGl;
 try {
@@ -37,7 +37,15 @@ module.exports = function(options, repo, params, id, styles) {
   var source;
   var sourceInfoPromise = new Promise(function(resolve, reject) {
     source = new mbtiles(mbtilesFile, function(err) {
+      if (err) {
+        reject(err);
+        return;
+      }
       source.getInfo(function(err, info) {
+        if (err) {
+          reject(err);
+          return;
+        }
         tileJSON['name'] = id;
         tileJSON['format'] = 'pbf';
 
@@ -50,6 +58,10 @@ module.exports = function(options, repo, params, id, styles) {
 
         Object.assign(tileJSON, params.tilejson || {});
         utils.fixTileJSONCenter(tileJSON);
+
+        if (options.dataDecoratorFunc) {
+          tileJSON = options.dataDecoratorFunc(id, 'tilejson', tileJSON);
+        }
         resolve();
       });
     });
@@ -114,6 +126,13 @@ module.exports = function(options, repo, params, id, styles) {
                 //console.log(shrinkers[style].getStats());
               }
             }
+            if (options.dataDecoratorFunc) {
+              if (isGzipped) {
+                data = zlib.unzipSync(data);
+                isGzipped = false;
+              }
+              data = options.dataDecoratorFunc(id, 'data', data, z, x, y);
+            }
           }
           if (format == 'pbf') {
             headers['Content-Type'] = 'application/x-protobuf';
@@ -165,9 +184,7 @@ module.exports = function(options, repo, params, id, styles) {
     return res.send(info);
   });
 
-  return new Promise(function(resolve, reject) {
-    sourceInfoPromise.then(function() {
-      resolve(app);
-    });
+  return sourceInfoPromise.then(function() {
+    return app;
   });
 };

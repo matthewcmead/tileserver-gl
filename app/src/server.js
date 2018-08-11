@@ -89,6 +89,12 @@ function start(opts) {
   checkPath('sprites');
   checkPath('mbtiles');
 
+  if (options.dataDecorator) {
+    try {
+      options.dataDecoratorFunc = require(path.resolve(paths.root, options.dataDecorator));
+    } catch (e) {}
+  }
+
   var data = clone(config.data || {});
 
   if (opts.cors) {
@@ -150,7 +156,7 @@ function start(opts) {
               return mbtilesFile;
             }
           ).then(function(sub) {
-            app.use('/styles/' + id + '/', sub);
+            app.use('/styles/', sub);
           })
         );
       } else {
@@ -189,7 +195,7 @@ function start(opts) {
         name: styleJSON.name,
         id: id,
         url: req.protocol + '://' + req.headers.host +
-             '/styles/' + id + '.json' + query
+             '/styles/' + id + '/style.json' + query
       });
     });
     res.send(result);
@@ -200,7 +206,7 @@ function start(opts) {
       var info = clone(serving[type][id]);
       var path = '';
       if (type == 'rendered') {
-        path = 'styles/' + id + '/rendered';
+        path = 'styles/' + id;
       } else {
         path = type + '/' + id;
       }
@@ -240,8 +246,9 @@ function start(opts) {
     startupPromises.push(new Promise(function(resolve, reject) {
       fs.readFile(templateFile, function(err, content) {
         if (err) {
-          console.error('Template not found:', err);
+          err = new Error('Template not found: ' + err.message);
           reject(err);
+          return;
         }
         var compiled = handlebars.compile(content.toString());
 
@@ -288,11 +295,11 @@ function start(opts) {
         var query = req.query.key ? ('?key=' + req.query.key) : '';
         style.wmts_link = 'http://wmts.maptiler.com/' +
           base64url('http://' + req.headers.host +
-            '/styles/' + id + '/rendered.json' + query) + '/wmts';
+            '/styles/' + id + '.json' + query) + '/wmts';
 
         var tiles = utils.getTileUrls(
             req, style.serving_rendered.tiles,
-            'styles/' + id + '/rendered', style.serving_rendered.format);
+            'styles/' + id, style.serving_rendered.format);
         style.xyz_link = tiles[0];
       }
     });
@@ -408,6 +415,11 @@ function start(opts) {
 
 module.exports = function(opts) {
   var running = start(opts);
+
+  running.startupPromise.catch(function(err) {
+    console.error(err.message);
+    process.exit(1);
+  });
 
   process.on('SIGINT', function() {
     process.exit();

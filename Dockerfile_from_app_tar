@@ -15,10 +15,10 @@ RUN \
 RUN mkdir -p /usr/src/app
 
 ADD app.tar.gz /usr/src
-ADD node-v4.8.3-linux-x64.tar.gz /usr/local
+ADD node-v6.11.5-linux-x64.tar.xz /usr/local
 
 RUN \
-    cd /usr/bin && ln -s /usr/local/node-v4.8.3-linux-x64/bin/npm && ln -s /usr/local/node-v4.8.3-linux-x64/bin/node
+    cd /usr/bin && ln -s /usr/local/node-v6.11.5-linux-x64/bin/npm && ln -s /usr/local/node-v6.11.5-linux-x64/bin/node
 
 RUN \
     cd /usr/lib64 && ln -s libcurl.so.4 libcurl-gnutls.so.4

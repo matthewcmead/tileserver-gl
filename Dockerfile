@@ -2,7 +2,7 @@ FROM centos:7
 MAINTAINER matthewcmead <matthewcmead@gmail.com>
 
 RUN \
-    rpm -Uvh https://rpm.nodesource.com/pub_4.x/el/7/x86_64/nodesource-release-el7-1.noarch.rpm \
+    rpm -Uvh https://rpm.nodesource.com/pub_6.x/el/7/x86_64/nodesource-release-el7-1.noarch.rpm \
 &&  yum groups mark install "Development Tools" \
 &&  yum groups mark convert "Development Tools" \
 &&  yum groupinstall -y 'Development Tools' \
@@ -14,11 +14,12 @@ RUN \
       protobuf-devel \
       xorg-x11-server-Xvfb \
       which \
-      nodejs \
+      nodejs-6.11.5 \
       centos-release-scl \
       centos-release-scl-rh \
       scl-utils \
       mesa-dri-drivers \
+      openssl-devel \
 &&  yum install -y \
       devtoolset-4-gcc* \
 &&  yum clean all
@@ -48,6 +49,7 @@ RUN \
 &&  scl enable devtoolset-4 'npm install --production' \
 &&  cd node_modules/\@mapbox/mapbox-gl-native \
 &&  scl enable devtoolset-4 'npm install' \
+&&  sed -i.bak "s/-Werror//" CMakeLists.txt \
 &&  scl enable devtoolset-4 'make BUILDTYPE=Release node' \
 &&  rm -rf node_modules
 
