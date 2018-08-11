@@ -56,6 +56,32 @@ RUN \
 RUN \
     cd /usr/lib64 && ln -s libcurl.so.4 libcurl-gnutls.so.4
 
+RUN \
+    cd /tmp \
+&&  git clone https://github.com/klokantech/tileserver-gl-styles \
+&&  cd tileserver-gl-styles/styles_modules \
+&&  mkdir dark_matter \
+&&  echo "https://github.com/openmaptiles/dark-matter-gl-style/releases/download/v1.4/v1.4.zip" >dark_matter/url \
+&&  mkdir fiord-color \
+&&  echo "https://github.com/openmaptiles/fiord-color-gl-style/releases/download/v1.4/v1.4.zip" >fiord-color/url \
+&&  mkdir positron \
+&&  echo "https://github.com/openmaptiles/positron-gl-style/releases/download/v1.5/v1.5.zip" >positron/url
+
+RUN \
+    yum install -y wget
+
+RUN \
+    cd /tmp/tileserver-gl-styles \
+&&  head -n -4 publish.js >publish.js.new \
+&&  mv -f publish.js.new publish.js \
+&&  node publish.js  \
+&&  rm -rf /usr/src/app/node_modules/tileserver-gl-styles/styles/* \
+&&  mv styles/* /usr/src/app/node_modules/tileserver-gl-styles/styles \
+&&  for x in /usr/src/app/node_modules/tileserver-gl-styles/styles/*/style.json; do sed -i.bak 's/"\([^"]*name:[^"]*latin[^"]*\)"/"{name_en}"/g' $x; done
+#&&  for x in /usr/src/app/node_modules/tileserver-gl-styles/styles/*/style.json; do sed -i.bak 's/"\([^"]*name:[^"]*latin[^"]*\)"/"{name_en}\\n\1"/g' $x; done
+
+
+
 VOLUME /data
 WORKDIR /data
 
