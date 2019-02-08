@@ -147,6 +147,10 @@ footer a {
   color: #787878;
   text-decoration: none;
 }
+.details h3, .identifier {
+  max-width: 550px;
+  word-break: break-all;
+}
 
 /* body background image */
 body {
